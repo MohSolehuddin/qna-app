@@ -31,8 +31,8 @@ model Account {
     id                       String  @id @default(cuid())
     userId                   String
     type                     String
-    provider                 String
-    providerAccountId        String
+    provider                 String?
+    providerAccountId        String?
     refresh_token            String? // @db.Text
     access_token             String? // @db.Text
     expires_at               Int?
@@ -47,7 +47,7 @@ model Account {
 }
 
 model Session {
-    id           String   @id @default(cuid())
+    id           String   @id @default(uuid())
     sessionToken String   @unique
     userId       String
     expires      DateTime
@@ -55,9 +55,11 @@ model Session {
 }
 
 model User {
-    id            String    @id @default(cuid())
+    id            String    @id @default(uuid())
     name          String?
+    username      String    @unique
     email         String?   @unique
+    password      String?
     emailVerified DateTime?
     image         String?
     accounts      Account[]

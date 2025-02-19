@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
+import CredentialsProvider from "next-auth/providers/credentials";
 import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 
@@ -38,6 +39,27 @@ export const authConfig = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        username: { label: "Username", type: "text" },
+        password: { label: "Password", type: "password" },
+      },
+      async authorize(credentials) {
+        const user = await db.user.findUnique({
+          where: {
+            username: credentials?.username,
+          },
+        });
+
+        // Validasi password (gunakan bcrypt atau hashing di sini)
+        if (user && user.password === credentials?.password) {
+          return user;
+        }
+
+        return null; // Login gagal jika user tidak ditemukan atau password salah
+      },
+    }),
     /**
      * ...add more providers here.
      *
@@ -48,6 +70,9 @@ export const authConfig = {
      * @see https://next-auth.js.org/providers/github
      */
   ],
+  pages: {
+    signIn: "/auth/login",
+  },
   adapter: PrismaAdapter(db),
   callbacks: {
     session: ({ session, user }) => ({
