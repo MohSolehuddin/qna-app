@@ -1,10 +1,5 @@
 import { z } from "zod";
-import {
-  ACCEPTED_IMAGE_TYPES,
-  MAX_FILE_SIZE,
-  MIN_NAME_LENGTH,
-  MIN_PASSWORD_LENGTH,
-} from "../constants";
+import { MIN_NAME_LENGTH, MIN_PASSWORD_LENGTH } from "../constants";
 
 export const registerInputSchema = z.object({
   name: z.string().min(MIN_NAME_LENGTH, {
@@ -14,18 +9,7 @@ export const registerInputSchema = z.object({
   password: z.string().min(MIN_PASSWORD_LENGTH, {
     message: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`,
   }),
-  image: z
-    .custom<FileList>((file) => file instanceof FileList && file.length > 0, {
-      message: "Image is required",
-    })
-    .refine(
-      (file) => (file[0]?.size ?? 0) <= MAX_FILE_SIZE,
-      "Image must be less than 1MB",
-    )
-    .refine(
-      (file) => ACCEPTED_IMAGE_TYPES.includes(file[0]?.type ?? ""),
-      "Only .jpg, .jpeg, .png and .gif formats are allowed",
-    ),
+  image: z.any(),
 });
 
 export const registerDatabaseSchema = registerInputSchema.extend({

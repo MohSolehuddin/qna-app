@@ -1,7 +1,7 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import argon2 from "argon2"; // Import argon2
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import DiscordProvider from "next-auth/providers/discord";
 import GoogleProvider from "next-auth/providers/google";
 
 import { db } from "~/server/db";
@@ -16,11 +16,6 @@ declare module "next-auth" {
 
 export const authConfig: NextAuthConfig = {
   providers: [
-    DiscordProvider({
-      clientId: process.env.DISCORD_CLIENT_ID ?? "",
-      clientSecret: process.env.DISCORD_CLIENT_SECRET ?? "",
-      allowDangerousEmailAccountLinking: true,
-    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
@@ -34,13 +29,25 @@ export const authConfig: NextAuthConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
-
-        const user = await db.user.findUnique({
-          where: { username: credentials.username },
+        const user = await db.user.findFirst({
+          where: {
+            OR: [
+              { username: credentials.username },
+              { email: credentials.username },
+            ],
+          },
         });
 
-        if (user && user.password === credentials.password) {
-          return user;
+        if (user && user.password) {
+          const isPasswordValid = await argon2.verify(
+            user.password,
+            credentials.password,
+          );
+
+          if (isPasswordValid) {
+            console.log("User logged in:", user);
+            return user;
+          }
         }
 
         return null;
@@ -59,6 +66,12 @@ export const authConfig: NextAuthConfig = {
         id: user.id,
       },
     }),
+    /**
+     * Redirects to the baseUrl if the url is relative or if it starts with the baseUrl.
+     * Otherwise, it returns the original url.
+     * @param {{ url: string, baseUrl: string }} param0
+     * @returns {Promise<string>}
+     */
     redirect: async ({ url, baseUrl }) => {
       if (url === baseUrl || url.startsWith(baseUrl)) {
         return baseUrl;

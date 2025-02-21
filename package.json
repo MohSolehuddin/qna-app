@@ -34,6 +34,7 @@
     "@trpc/client": "^11.0.0-rc.446",
     "@trpc/react-query": "^11.0.0-rc.446",
     "@trpc/server": "^11.0.0-rc.446",
+    "argon2": "^0.41.1",
     "class-variance-authority": "^0.7.1",
     "cloudinary": "^2.5.1",
     "clsx": "^2.1.1",

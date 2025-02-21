@@ -3,6 +3,8 @@ import "~/styles/globals.css";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
+import { ModeToggle } from "~/components/ui/button-toggle-mode";
+import Container from "~/components/ui/container";
 import { ThemeProvider } from "~/components/ui/theme-provider";
 import { TRPCReactProvider } from "~/trpc/react";
 
@@ -24,7 +26,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TRPCReactProvider>{children}</TRPCReactProvider>
+          <TRPCReactProvider>
+            <Container>
+              <section className="absolute right-2 top-2">
+                <ModeToggle />
+              </section>
+              {children}
+            </Container>
+          </TRPCReactProvider>
         </ThemeProvider>
       </body>
     </html>
