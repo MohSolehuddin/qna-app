@@ -3,7 +3,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import { api } from "~/trpc/server";
 
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -17,8 +16,9 @@ import {
 } from "~/components/ui/form";
 import { Input } from "~/components/ui/input";
 import { registerInputSchema } from "~/lib/schema/registerSchema";
+import { api } from "~/trpc/react";
 
-export function FormRegister() {
+export default function FormRegister() {
   const form = useForm<z.infer<typeof registerInputSchema>>({
     resolver: zodResolver(registerInputSchema),
     defaultValues: {
@@ -30,7 +30,7 @@ export function FormRegister() {
   });
 
   function onSubmit(values: z.infer<typeof registerInputSchema>) {
-    void api.register(values);
+    void api.register.useMutation(values);
   }
 
   const [resource, setResource] = useState();

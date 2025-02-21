@@ -36,7 +36,8 @@
     "**/*.tsx",
     "**/*.cjs",
     "**/*.js",
-    ".next/types/**/*.ts"
+    ".next/types/**/*.ts",
+    "src/components/ui/upload-to-cloudinary.jsx"
   ],
   "exclude": ["node_modules"]
 }
