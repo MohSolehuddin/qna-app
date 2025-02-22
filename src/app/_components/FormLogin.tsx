@@ -42,7 +42,9 @@ export function FormLogin() {
       username: values.username,
       password: values.password,
     });
-
+    alert(
+      `Cek result ${result?.code} ${result?.error} ${result?.status} ${result?.ok} ${result?.url}`,
+    );
     // Handle the response from signIn
     if (result?.error) {
       alert("Login failed: " + result.error);
@@ -92,7 +94,6 @@ export function FormLogin() {
         <div className="h-[1px] w-full bg-gray-400"></div>
       </section>
       <Button onClick={() => signIn("google")}>Login with Google</Button>
-      <Button onClick={() => signIn("discord")}>Login with Discord</Button>
     </Form>
   );
 }

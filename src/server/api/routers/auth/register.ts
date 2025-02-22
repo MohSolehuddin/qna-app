@@ -18,7 +18,8 @@ export const registerRouter = createTRPCRouter({
       }
 
       const password = await argon2.hash(input.password);
-      return ctx.db.user.create({
+
+      const user = await ctx.db.user.create({
         data: {
           name: input.name,
           username:
@@ -28,5 +29,17 @@ export const registerRouter = createTRPCRouter({
           image: imageUrl,
         },
       });
+      const expires_at = new Date().getTime() + 1 * 30;
+
+      await ctx.db.account.create({
+        data: {
+          userId: user.id,
+          type: "credentials",
+          provider: "credentials",
+          providerAccountId: `${user.name}-${user.id}`,
+          access_token: `oke-${user.id}`,
+        },
+      });
+      return user;
     }),
 });

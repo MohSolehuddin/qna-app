@@ -1,5 +1,6 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
 import argon2 from "argon2"; // Import argon2
+import { randomUUID } from "crypto";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
@@ -15,6 +16,9 @@ declare module "next-auth" {
 }
 
 export const authConfig: NextAuthConfig = {
+  // session: {
+  //   strategy: "jwt",
+  // },
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -59,13 +63,32 @@ export const authConfig: NextAuthConfig = {
   },
   adapter: PrismaAdapter(db),
   callbacks: {
-    session: ({ session, user }) => ({
-      ...session,
-      user: {
-        ...session.user,
-        id: user.id,
-      },
-    }),
+    async jwt({ token, user }) {
+      console.log("Jwt this your token and user info", token, user);
+      const sessionInfo = {
+        id: token.sub,
+        sessionToken: randomUUID(),
+        userId: user.id,
+        expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 30),
+        user: {
+          ...user,
+        },
+      };
+      console.log("This is jwt token", sessionInfo);
+      return sessionInfo;
+    },
+    session: ({ session, user }) => {
+      console.log("Login success this your session", session, user);
+      const token = {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
+      console.log("This is Oauth token", token);
+      return token;
+    },
     /**
      * Redirects to the baseUrl if the url is relative or if it starts with the baseUrl.
      * Otherwise, it returns the original url.
