@@ -74,3 +74,17 @@ model VerificationToken {
 
     @@unique([identifier, token])
 }
+
+model answers {
+  id            String    @id @default(uuid())
+  answer        String
+  questionId    String    @unique
+  question      questions @relation(fields: [questionId], references: [id])
+}
+
+model questions {
+  id            String    @id @default(uuid())
+  question      String
+  answer        answers?  @relation
+}
+
