@@ -1,8 +1,10 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { signIn } from "next-auth/react"; // Import signIn from NextAuth.js
+import { signIn, useSession } from "next-auth/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -27,6 +29,16 @@ const formSchema = z.object({
 });
 
 export function FormLogin() {
+  const { status } = useSession();
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      router.push("/");
+    }
+  }, [status, router]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -36,21 +48,19 @@ export function FormLogin() {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Call signIn with 'credentials' provider
+    setLoading(true);
     const result = await signIn("credentials", {
-      redirect: false, // Disable automatic redirect
+      redirect: false,
       username: values.username,
       password: values.password,
     });
-    alert(
-      `Cek result ${result?.code} ${result?.error} ${result?.status} ${result?.ok} ${result?.url}`,
-    );
-    // Handle the response from signIn
+
     if (result?.error) {
       alert("Login failed: " + result.error);
     } else {
-      window.location.href = "/"; // Redirect to home page or dashboard after success
+      router.push("/");
     }
+    setLoading(false);
   };
 
   return (
@@ -86,14 +96,18 @@ export function FormLogin() {
           <p>Don&apos;t have an account?</p>
           <Link href="/register">Register</Link>
         </section>
-        <Button type="submit">Submit</Button>
+        <Button type="submit" disabled={loading}>
+          {loading ? "Loading..." : "Submit"}
+        </Button>
       </form>
       <section className="flex gap-4">
         <div className="h-[1px] w-full bg-gray-400"></div>
         <p>Or</p>
         <div className="h-[1px] w-full bg-gray-400"></div>
       </section>
-      <Button onClick={() => signIn("google")}>Login with Google</Button>
+      <Button onClick={() => signIn("google")} disabled={loading}>
+        {loading ? "Loading..." : "Login with Google"}
+      </Button>
     </Form>
   );
 }
