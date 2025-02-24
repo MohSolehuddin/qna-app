@@ -5,7 +5,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { api } from "~/trpc/server";
 
-import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Form,
@@ -32,8 +31,6 @@ export function FormRegister() {
   function onSubmit(values: z.infer<typeof registerInputSchema>) {
     void api.register(values);
   }
-
-  const [resource, setResource] = useState();
 
   return (
     <Form {...form}>
