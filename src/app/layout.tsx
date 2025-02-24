@@ -3,6 +3,7 @@ import "~/styles/globals.css";
 import { GeistSans } from "geist/font/sans";
 import { type Metadata } from "next";
 
+import { SessionProvider } from "next-auth/react";
 import { ModeToggle } from "~/components/ui/button-toggle-mode";
 import Container from "~/components/ui/container";
 import { ThemeProvider } from "~/components/ui/theme-provider";
@@ -27,12 +28,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <TRPCReactProvider>
-            <Container>
-              <section className="absolute right-2 top-2">
-                <ModeToggle />
-              </section>
-              {children}
-            </Container>
+            <SessionProvider>
+              <Container>
+                <section className="absolute right-2 top-2">
+                  <ModeToggle />
+                </section>
+                {children}
+              </Container>
+            </SessionProvider>
           </TRPCReactProvider>
         </ThemeProvider>
       </body>
