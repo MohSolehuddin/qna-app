@@ -29,7 +29,6 @@ export default function FormRegister() {
     },
   });
 
-  // Panggil useMutation DI DALAM KOMPONEN
   const registerMutation = api.register.useMutation();
 
   function fileToBase64(file: File): Promise<string> {
@@ -116,7 +115,7 @@ export default function FormRegister() {
                     onChange={(event) => {
                       const file = event.target.files?.[0];
                       if (file) {
-                        onChange(file); // Pastikan nilai diperbarui
+                        onChange(file);
                       }
                     }}
                     {...field}
