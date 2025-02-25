@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import { type z } from "zod";
 import { api } from "~/trpc/server";
 
 import { Button } from "~/components/ui/button";
@@ -81,7 +81,7 @@ export function FormRegister() {
         <FormField
           control={form.control}
           name="image"
-          render={({ field: { onChange, ...field } }) => (
+          render={({ field: { onChange } }) => (
             <FormItem>
               <FormLabel>Profile Image</FormLabel>
               <FormControl>
