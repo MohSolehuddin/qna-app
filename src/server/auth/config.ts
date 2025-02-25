@@ -2,16 +2,29 @@ import { PrismaAdapter } from "@auth/prisma-adapter";
 import { type DefaultSession, type NextAuthConfig } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import GoogleProvider from "next-auth/providers/google";
+import generateUniqueUsername from "~/lib/utils/generateUniqueUsername";
 import { verifyPassword } from "~/lib/utils/verifyPassword";
-
 import { db } from "~/server/db";
 
 declare module "next-auth" {
   interface Session extends DefaultSession {
     user: {
       id: string;
+      username: string;
     } & DefaultSession["user"];
   }
+
+  interface User {
+    id?: string;
+    username: string;
+  }
+}
+
+interface GoogleProfile {
+  sub: string;
+  name?: string;
+  email?: string;
+  picture?: string;
 }
 
 export const authConfig: NextAuthConfig = {
@@ -23,6 +36,34 @@ export const authConfig: NextAuthConfig = {
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
       allowDangerousEmailAccountLinking: true,
+      async profile(profile: GoogleProfile, tokens) {
+        console.log("Google profile", profile);
+        console.log("Google tokens", tokens);
+        if (!profile.email) {
+          throw new Error("Google profile is missing email");
+        }
+
+        const username = await generateUniqueUsername(profile.name ?? "");
+
+        const user = await db.user.upsert({
+          where: { email: profile.email },
+          update: {},
+          create: {
+            name: profile.name ?? "",
+            email: profile.email,
+            image: profile.picture ?? "",
+            username: username,
+          },
+        });
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          username: user.username,
+        };
+      },
     }),
     CredentialsProvider({
       name: "Credentials",
@@ -32,6 +73,7 @@ export const authConfig: NextAuthConfig = {
       },
       async authorize(credentials) {
         if (!credentials?.username || !credentials?.password) return null;
+
         const user = await db.user.findFirst({
           where: {
             OR: [
@@ -40,14 +82,12 @@ export const authConfig: NextAuthConfig = {
             ],
           },
         });
+        const password = credentials.password as string;
 
-        if (user && user.password) {
-          const isPasswordValid = await verifyPassword(
-            credentials?.password,
-            user.password,
-          );
+        if (user && password) {
+          const isValid = await verifyPassword(password, user.password ?? "");
 
-          if (isPasswordValid) {
+          if (isValid) {
             return {
               id: user.id,
               name: user.name,
@@ -66,7 +106,6 @@ export const authConfig: NextAuthConfig = {
     signIn: "/auth/signin",
   },
   secret: process.env.AUTH_SECRET,
-  adapter: PrismaAdapter(db),
   callbacks: {
     async jwt({ token, user, trigger }) {
       if (user) {
@@ -75,9 +114,8 @@ export const authConfig: NextAuthConfig = {
       }
 
       if (trigger === "update") {
-        // Contoh: Update username jika diubah
         const updatedUser = await db.user.findUnique({
-          where: { id: token.id },
+          where: { id: token.id as string },
         });
         if (updatedUser) {
           token.username = updatedUser.username;
@@ -92,10 +130,11 @@ export const authConfig: NextAuthConfig = {
         ...session,
         user: {
           ...session.user,
-          id: token.id,
-          username: token.username,
+          id: token.id as string,
+          username: token.username as string,
         },
       };
     },
   },
+  adapter: PrismaAdapter(db),
 };
