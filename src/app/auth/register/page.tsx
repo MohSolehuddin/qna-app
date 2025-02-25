@@ -2,7 +2,7 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
+import type { z } from "zod";
 
 import { Button } from "~/components/ui/button";
 import Container from "~/components/ui/container";
@@ -31,26 +31,13 @@ export default function FormRegister() {
 
   const registerMutation = api.register.useMutation();
 
-  function fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = (error) => reject(error);
-    });
-  }
-
   async function onSubmit(values: z.infer<typeof registerInputSchema>) {
-    let base64Image = "";
-    if (values.image) {
-      base64Image = await fileToBase64(values.image);
-    }
-
     registerMutation.mutate(
-      { ...values, image: base64Image }, // Kirim Base64 string ke backend
+      { ...values, image: values.image },
       {
         onSuccess: (data) => console.log("User registered successfully:", data),
-        onError: (error) => console.error("Error registering user:", error),
+        onError: (error) =>
+          console.error("Error registering user:", String(error.message ?? "")), // Fix error 43:52
       },
     );
   }
@@ -102,10 +89,10 @@ export default function FormRegister() {
               </FormItem>
             )}
           />
-          <FormField
+          {/* <FormField
             control={form.control}
             name="image"
-            render={({ field: { onChange, ...field } }) => (
+            render={({ field: { onChange, ...rest } }) => (
               <FormItem>
                 <FormLabel>Profile Image</FormLabel>
                 <FormControl>
@@ -114,17 +101,15 @@ export default function FormRegister() {
                     accept="image/*"
                     onChange={(event) => {
                       const file = event.target.files?.[0];
-                      if (file) {
-                        onChange(file);
-                      }
+                      onChange(file); // Update the form state with the file
                     }}
-                    {...field}
+                    {...rest} // Spread remaining field props (no need to bind `value`)
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
-          />
+          /> */}
 
           <Button type="submit">Submit</Button>
         </form>
