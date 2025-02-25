@@ -1,5 +1,10 @@
 {
   "buildCommand": "pnpm run build",
   "devCommand": "pnpm run dev",
-  "installCommand": "pnpm install --include=dev"
+  "installCommand": "pnpm install --include=dev",
+  "build": {
+    "env": {
+      "NODE_VERSION": "20"
+    }
+  }
 }
